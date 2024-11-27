@@ -1,9 +1,12 @@
+// Copyright 2024-, Semiotic AI, Inc.
+// SPDX-License-Identifier: Apache-2.0
+
 //! # Fetch Ethereum Block
 //!
 //! Demonstrates how to fetch a single block from Ethereum firehose.
 
 use firehose_client::{Chain, FirehoseClient};
-use firehose_protos::EthBlock as Block;
+use vee::protos::EthBlock as Block;
 
 #[tokio::main]
 async fn main() {

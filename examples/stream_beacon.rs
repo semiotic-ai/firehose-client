@@ -1,9 +1,12 @@
+// Copyright 2024-, Semiotic AI, Inc.
+// SPDX-License-Identifier: Apache-2.0
+
 //! # Example: Stream Beacon Blocks
 //!
 //! Demonstrates how to stream a range of blocks from Firehose Beacon
 
+use beacon_protos::Block as FirehoseBeaconBlock;
 use firehose_client::{Chain, FirehoseClient};
-use forrestrie::beacon_v1::Block as FirehoseBeaconBlock;
 use futures::StreamExt;
 
 #[tokio::main]
@@ -15,7 +18,7 @@ async fn main() {
 
     let mut client = FirehoseClient::new(Chain::Beacon);
     let mut stream = client
-        .stream_beacon_with_retry(START_SLOT, TOTAL_SLOTS)
+        .stream_blocks::<FirehoseBeaconBlock>(START_SLOT, TOTAL_SLOTS)
         .await
         .unwrap();
 

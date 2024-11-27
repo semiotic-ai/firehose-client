@@ -1,9 +1,12 @@
+// Copyright 2024-, Semiotic AI, Inc.
+// SPDX-License-Identifier: Apache-2.0
+
 //! # Example: Stream Ethereum Blocks
 //!
 //! This example demonstrates how to stream Ethereum blocks using the Firehose client.
 use firehose_client::{Chain, FirehoseClient};
-use firehose_protos::EthBlock as Block;
 use futures::StreamExt;
+use vee::protos::EthBlock as Block;
 
 #[tokio::main]
 async fn main() {
@@ -14,7 +17,7 @@ async fn main() {
 
     let mut client = FirehoseClient::new(Chain::Ethereum);
     let mut stream = client
-        .stream_blocks(START_BLOCK, TOTAL_BLOCKS)
+        .stream_blocks::<Block>(START_BLOCK, TOTAL_BLOCKS)
         .await
         .unwrap();
 

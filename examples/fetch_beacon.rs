@@ -1,10 +1,13 @@
+// Copyright 2024-, Semiotic AI, Inc.
+// SPDX-License-Identifier: Apache-2.0
+
 //! # Fetch Beacon Block
 //!
 //! Demonstrates how to fetch a single block from Beacon Firehose, using the `Fetch` API.
 
+use beacon_protos::{Block as BeaconBlock, Body};
 use firehose_client::{Chain, FirehoseClient};
-use firehose_protos::EthBlock;
-use forrestrie::beacon_v1::{block::Body, Block as BeaconBlock};
+use vee::protos::EthBlock;
 
 #[tokio::main]
 async fn main() {

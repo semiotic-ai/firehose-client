@@ -2,12 +2,13 @@ use std::str::FromStr;
 
 use crate::error::ClientError;
 use dotenvy::{dotenv, var};
-use firehose_protos::{
-    EthBlock as Block, FetchClient, Request, SingleBlockRequest, SingleBlockResponse, StreamClient,
+use firehose_rs::{
+    FetchClient, FromResponse, HasNumberOrSlot, Request, SingleBlockRequest, SingleBlockResponse,
+    StreamClient,
 };
-use forrestrie::beacon_v1::Block as FirehoseBeaconBlock;
 use tokio_stream::wrappers::ReceiverStream;
 use tonic::{
+    metadata::MetadataValue,
     transport::{Channel, Uri},
     Response, Status,
 };
@@ -57,14 +58,70 @@ impl FirehoseClient {
         Ok(client)
     }
 
-    /// Stream a block range of Beacon blocks, with a retry mechanism if the stream cuts off
-    /// before the total number of blocks requested is reached, and accounting for missed slots.
-    pub async fn stream_beacon_with_retry(
+    /// Stream blocks from the Firehose service.
+    ///
+    /// This generic method streams blocks of type `T` from a specified start point,
+    /// for a given total number of blocks. It ensures that any missed slots or block
+    /// numbers are filled in with the last valid block to maintain continuity in the stream.
+    ///
+    /// # Type Parameters
+    ///
+    /// * `T`: The block type, which must implement the [`FromResponse`] and
+    ///   [`HasNumberOrSlot`] traits. The type must also be `Clone`, `Send`, and `Sync` to
+    ///   support concurrent processing.
+    ///
+    /// # Parameters
+    ///
+    /// * `start`: The starting block number or slot to begin streaming from.
+    /// * `total`: The total number of blocks or slots to stream.
+    ///
+    /// # Returns
+    ///
+    /// Returns a [`Result`] wrapping a stream (`futures::Stream`) of blocks of type `T`.
+    /// The stream will yield blocks as they are received from the Firehose service.
+    ///
+    /// # Slot/Number Handling
+    ///
+    /// For Beacon chain blocks, missing slots are filled in with the last
+    /// valid block. For verifying extracted blocks, we need block roots for each block.
+    /// For missed slots the block root of the last non-missed slot block is used,
+    /// as this is what gets added to the `block_roots` buffer on Beacon State.
+    ///
+    /// # Example
+    ///
+    /// ```rust, ignore
+    /// use firehose_client::{FirehoseClient, FirehoseBeaconBlock};
+    /// use futures::StreamExt;
+    ///
+    /// let mut client = FirehoseClient::new(...);
+    /// let stream = client
+    ///     .stream_blocks::<FirehoseBeaconBlock>(start_slot, total_slots)
+    ///     .await?;
+    ///
+    /// stream.for_each(|block| {
+    ///     println!("Received block: {:?}", block);
+    ///     futures::future::ready(())
+    /// }).await;
+    /// ```
+    ///
+    /// # Concurrency
+    ///
+    /// This method spawns a background task to handle the streaming and conversion
+    /// logic, ensuring that the main thread is return a stream to process incoming blocks.
+    ///
+    /// *NOTE*: For Beacon chain blocks, missing slots are filled in with the last
+    /// valid block. For verifying extracted blocks, we need block roots for each block.
+    /// For missed slots the block root of the last non-missed slot block is used,
+    /// as this is what gets added to the `block_roots` buffer on Beacon State.
+    pub async fn stream_blocks<T>(
         &mut self,
         start: u64,
         total: u64,
-    ) -> Result<impl futures::Stream<Item = FirehoseBeaconBlock>, ClientError> {
-        let (tx, rx) = tokio::sync::mpsc::channel::<FirehoseBeaconBlock>(8192);
+    ) -> Result<impl futures::Stream<Item = T>, ClientError>
+    where
+        T: FromResponse + HasNumberOrSlot + Clone + Send + Sync + 'static,
+    {
+        let (tx, rx) = tokio::sync::mpsc::channel::<T>(8192);
 
         let chain = self.chain;
         let client = self.get_streaming_client().await?;
@@ -72,7 +129,7 @@ impl FirehoseClient {
         tokio::spawn(async move {
             let mut blocks = 0;
             let mut last_valid_slot: Option<u64> = None;
-            let mut last_valid_block: Option<FirehoseBeaconBlock> = None;
+            let mut last_valid_block: Option<T> = None;
 
             while blocks < total {
                 let mut client = client.clone();
@@ -82,6 +139,7 @@ impl FirehoseClient {
                     start + total - 1,
                     BlocksRequested::All,
                 );
+
                 match client.blocks(request).await {
                     Ok(response) => {
                         let mut stream_inner = response.into_inner();
@@ -89,82 +147,46 @@ impl FirehoseClient {
                             if blocks % 100 == 0 {
                                 trace!("Blocks fetched: {}", blocks);
                             }
-                            match FirehoseBeaconBlock::try_from(block_msg) {
+
+                            match T::from_response(block_msg) {
                                 Ok(block) => {
                                     if let Some(last_slot) = last_valid_slot {
-                                        let missed_slots = block.slot.saturating_sub(last_slot + 1);
+                                        let missed_slots =
+                                            block.number_or_slot().saturating_sub(last_slot + 1);
                                         if missed_slots > 0 {
-                                            trace!("Missed block at slot: {}", start + blocks);
-
-                                            let last_block = last_valid_block.take().unwrap();
-                                            let tx = tx.clone();
-                                            for _ in 0..missed_slots {
-                                                blocks += 1;
-                                                tx.send(last_block.clone()).await.unwrap();
+                                            trace!(
+                                                "Detected {} missed slots, filling in...",
+                                                missed_slots
+                                            );
+                                            if let Some(ref last_block) = last_valid_block {
+                                                for _ in 0..missed_slots {
+                                                    blocks += 1;
+                                                    let _ = tx.send(last_block.clone()).await;
+                                                }
                                             }
                                         }
                                     }
-                                    last_valid_slot = Some(block.slot);
-                                    last_valid_block = Some(block.clone());
+
+                                    if let Chain::Beacon = chain {
+                                        last_valid_slot = Some(block.number_or_slot());
+                                        last_valid_block = Some(block.clone());
+                                    }
 
                                     blocks += 1;
-                                    tx.clone().send(block).await.unwrap();
+                                    let _ = tx.send(block).await;
                                 }
                                 Err(e) => {
-                                    error!("Failed to convert block message to block: {e}");
+                                    error!("Failed to convert block message: {e}");
                                     break;
                                 }
                             }
                         }
                     }
                     Err(e) => {
-                        error!("Failed to get blocks stream: {:?}", e.code());
+                        error!("Failed to stream blocks: {:?}", e);
                         break;
                     }
                 };
-            }
-        });
-
-        Ok(ReceiverStream::new(rx))
-    }
-
-    pub async fn stream_blocks(
-        &mut self,
-        start: u64,
-        total: u64,
-    ) -> Result<impl futures::Stream<Item = Block>, ClientError> {
-        let (tx, rx) = tokio::sync::mpsc::channel::<Block>(8192);
-
-        let chain = self.chain;
-        let client = self.get_streaming_client().await?;
-
-        tokio::spawn(async move {
-            let mut blocks = 0;
-
-            while blocks < total {
-                let mut client = client.clone();
-                let request = create_blocks_streaming_request(
-                    chain,
-                    start + blocks,
-                    start + total - 1,
-                    BlocksRequested::All,
-                );
-                let response = client.blocks(request).await.unwrap();
-                let mut stream_inner = response.into_inner();
-                while let Ok(Some(block_msg)) = stream_inner.message().await {
-                    if blocks % 100 == 0 && blocks != 0 {
-                        trace!("Blocks fetched: {}", blocks);
-                    }
-                    match Block::try_from(block_msg) {
-                        Ok(block) => {
-                            blocks += 1;
-                            tx.clone().send(block).await.unwrap();
-                        }
-                        Err(e) => {
-                            panic!("Failed to convert block message to block: {e}");
-                        }
-                    }
-                }
             }
         });
 
@@ -247,8 +269,7 @@ impl<T> FirehoseRequest for tonic::Request<T> {
 
 fn insert_api_key_if_provided<T>(request: &mut tonic::Request<T>, chain: Chain) {
     if let Ok(api_key) = var(chain.api_key_env_var_as_str()) {
-        let api_key_header =
-            tonic::metadata::MetadataValue::from_str(&api_key).expect("Invalid API key format");
+        let api_key_header = MetadataValue::from_str(&api_key).expect("Invalid API key format");
         request.metadata_mut().insert("x-api-key", api_key_header);
     }
 }

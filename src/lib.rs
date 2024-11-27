@@ -1,3 +1,6 @@
+// Copyright 2024-, Semiotic AI, Inc.
+// SPDX-License-Identifier: Apache-2.0
+
 //! # Rust Firehose Client
 //!
 //! Rust implementation of a client for the [StreamingFast Firehose](https://firehose.streamingfast.io/)
@@ -7,9 +10,9 @@
 //!
 //! ```no_run
 //! # use firehose_client::{Chain, FirehoseClient};
-//! # use firehose_protos::EthBlock as Block;
+//! # use vee::EthBlock as Block;
 //! # #[tokio::main]
-//! # async fn main() -> Result<(), firehose_protos::ProtosError> {
+//! # async fn main() -> Result<(), vee::ProtosError> {
 //! let mut client = FirehoseClient::new(Chain::Ethereum);
 //!
 //! if let Some(response) = client.fetch_block(20672593).await.unwrap().ok() {
@@ -30,7 +33,7 @@
 //! # use firehose_client::{Chain, FirehoseClient};
 //! # use futures::StreamExt;
 //! # #[tokio::main]
-//! # async fn main() -> Result<(), firehose_protos::ProtosError> {
+//! # async fn main() -> Result<(), vee::ProtosError> {
 //! const TOTAL_BLOCKS: u64 = 8192;
 //! const START_BLOCK: u64 = 19581798;
 //!
