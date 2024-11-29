@@ -8,7 +8,7 @@
 //!
 //! ## Fetching an Ethereum Block
 //!
-//! ```no_run
+//! ```rust,no_run
 //! # use firehose_client::{Chain, FirehoseClient};
 //! # use vee::EthBlock as Block;
 //! # #[tokio::main]
@@ -29,7 +29,7 @@
 //!
 //! ## Streaming Ethereum Blocks
 //!
-//! ```no_run
+//! ```rust,no_run
 //! # use firehose_client::{Chain, FirehoseClient};
 //! # use futures::StreamExt;
 //! # #[tokio::main]
