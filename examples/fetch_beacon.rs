@@ -7,7 +7,7 @@
 
 use beacon_protos::{Block as BeaconBlock, Body};
 use firehose_client::{Chain, FirehoseClient};
-use vee::protos::EthBlock;
+use vee::EthBlock;
 
 #[tokio::main]
 async fn main() {

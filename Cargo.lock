@@ -838,7 +838,7 @@ checksum = "8c3c1a368f70d6cf7302d78f8f7093da241fb8e8807c05cc9e51a125895a6d5b"
 [[package]]
 name = "beacon-protos"
 version = "0.1.1"
-source = "git+https://github.com/semiotic-ai/beacon-protos.git?branch=main#8110fadbe86c421f90651cc017cf75c83f88c218"
+source = "git+https://github.com/semiotic-ai/beacon-protos.git?branch=main#3fe9a2e91dd1788d53f97acb6fd3616cdfa1fda3"
 dependencies = [
  "bls",
  "firehose-rs",
@@ -2062,7 +2062,7 @@ dependencies = [
 [[package]]
 name = "firehose-protos"
 version = "0.1.0"
-source = "git+https://github.com/semiotic-ai/veemon.git?branch=main#16df05cc93e737b3422b59560fbbcfb3cbd32ed7"
+source = "git+https://github.com/semiotic-ai/veemon.git?branch=main#8534fb8dcda37d89a1527ed4db4c5dce18766c90"
 dependencies = [
  "alloy-consensus",
  "alloy-eip2930",
@@ -2087,7 +2087,7 @@ dependencies = [
 [[package]]
 name = "firehose-rs"
 version = "0.1.0"
-source = "git+https://github.com/semiotic-ai/firehose-rs.git?branch=main#55851f4e89ba4191c0dab83b3391d9c3b5bbbcf1"
+source = "git+https://github.com/semiotic-ai/firehose-rs.git?branch=main#d6ac5c1f3228fffc4cfb0f1cf623a948477cf167"
 dependencies = [
  "prost",
  "prost-build",
@@ -2120,7 +2120,7 @@ checksum = "0ce7134b9999ecaf8bcd65542e436736ef32ddca1b3e06094cb6ec5755203b80"
 [[package]]
 name = "flat-files-decoder"
 version = "0.1.0"
-source = "git+https://github.com/semiotic-ai/veemon.git?branch=main#16df05cc93e737b3422b59560fbbcfb3cbd32ed7"
+source = "git+https://github.com/semiotic-ai/veemon.git?branch=main#8534fb8dcda37d89a1527ed4db4c5dce18766c90"
 dependencies = [
  "alloy-consensus",
  "alloy-eip2930",
@@ -2451,7 +2451,7 @@ dependencies = [
 [[package]]
 name = "header-accumulator"
 version = "0.1.0"
-source = "git+https://github.com/semiotic-ai/veemon.git?branch=main#16df05cc93e737b3422b59560fbbcfb3cbd32ed7"
+source = "git+https://github.com/semiotic-ai/veemon.git?branch=main#8534fb8dcda37d89a1527ed4db4c5dce18766c90"
 dependencies = [
  "alloy-primitives 0.8.14",
  "base64 0.21.7",
@@ -6076,7 +6076,7 @@ checksum = "f1bddf1187be692e79c5ffeab891132dfb0f236ed36a43c7ed39f1165ee20191"
 [[package]]
 name = "vee"
 version = "0.1.0"
-source = "git+https://github.com/semiotic-ai/veemon.git?branch=main#16df05cc93e737b3422b59560fbbcfb3cbd32ed7"
+source = "git+https://github.com/semiotic-ai/veemon.git?branch=main#8534fb8dcda37d89a1527ed4db4c5dce18766c90"
 dependencies = [
  "firehose-protos",
  "flat-files-decoder",

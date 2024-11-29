@@ -8,7 +8,7 @@
 //!
 //! ## Fetching an Ethereum Block
 //!
-//! ```no_run
+//! ```rust,no_run
 //! # use firehose_client::{Chain, FirehoseClient};
 //! # use vee::EthBlock as Block;
 //! # #[tokio::main]
@@ -29,9 +29,10 @@
 //!
 //! ## Streaming Ethereum Blocks
 //!
-//! ```no_run
+//! ```rust,no_run
 //! # use firehose_client::{Chain, FirehoseClient};
 //! # use futures::StreamExt;
+//! # use vee::EthBlock as Block;
 //! # #[tokio::main]
 //! # async fn main() -> Result<(), vee::ProtosError> {
 //! const TOTAL_BLOCKS: u64 = 8192;
@@ -39,7 +40,7 @@
 //!
 //! let mut client = FirehoseClient::new(Chain::Ethereum);
 //! let mut stream = client
-//!     .stream_blocks(START_BLOCK, TOTAL_BLOCKS)
+//!     .stream_blocks::<Block>(START_BLOCK, TOTAL_BLOCKS)
 //!     .await
 //!     .unwrap();
 //!
