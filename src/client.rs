@@ -283,6 +283,7 @@ pub enum Chain {
     Ethereum,
     Beacon,
     Arbitrum,
+    Solana,
 }
 
 impl Chain {
@@ -291,6 +292,7 @@ impl Chain {
             Self::Beacon => "BEACON_API_KEY",
             Self::Ethereum => "ETHEREUM_API_KEY",
             Self::Arbitrum => "ARBITRUM_API_KEY",
+            Self::Solana => "SOLANA_API_KEY",
         }
     }
 
@@ -307,6 +309,7 @@ impl Chain {
                 var("FIREHOSE_ARBITRUM_URL")?,
                 var("FIREHOSE_ARBITRUM_PORT")?,
             ),
+            Self::Solana => (var("FIREHOSE_SOLANA_URL")?, var("FIREHOSE_SOLANA_PORT")?),
         };
 
         Ok(format!("{}:{}", url, port).parse::<Uri>()?)
