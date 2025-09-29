@@ -1148,7 +1148,7 @@ checksum = "55248b47b0caf0546f7988906588779981c43bb1bc9d0c44087278f80cdb44ba"
 [[package]]
 name = "beacon-protos"
 version = "0.2.1"
-source = "git+https://github.com/semiotic-ai/beacon-protos.git?branch=main#43f0bc61a4336c90753cee9ac631419929c00ebe"
+source = "git+https://github.com/semiotic-ai/beacon-protos.git?branch=main#d1e12a7e7ee03001726e5784dd7c21ec8734a494"
 dependencies = [
  "bls",
  "firehose-rs 0.3.0",
