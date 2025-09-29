@@ -19,8 +19,3 @@ tokio = { version = "1.47.1", features = ["macros", "rt-multi-thread"] }
 tokio-stream = "0.1.17"
 tonic = { version = "0.14.2", features = ["tls-native-roots"] }
 tracing = "0.1.41"
-
-[dev-dependencies]
-beacon-protos = { git = "https://github.com/semiotic-ai/beacon-protos.git", branch = "main" }
-vee = { git = "https://github.com/semiotic-ai/veemon.git", branch = "suchapalaver/maintain" }
-hex = "0.4.3"
